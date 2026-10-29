@@ -15,6 +15,10 @@ Team labels from the project brief: **Member A = [Name A]** and **Member B = [Na
 
 Shared configuration (`package.json`, `app/layout.tsx`, global styles, and shared types) can cause conflicts. Agree on changes first; preferably one member owns each shared-file change and the other rebases or merges it.
 
+## Working in parallel
+
+After both members review and agree on `docs/DB_DESIGN.md` and the shared database/API interfaces, neither member needs to wait for the other to finish every phase. Member A can build PostgreSQL and customer/exchange features while Member B builds MongoDB, authentication, and merchant/admin features. Keep those changes in separate feature branches and owned folders. Coordinate before implementing a shared interface or editing shared configuration, then review and merge pull requests independently.
+
 ## Git history expectations
 
 Both contributors must make commits under their own Git identity and have their own feature branches and pull requests. Do not share one person's account or commit identity. Each person should make several small, meaningful commits in their assigned areas; review alone does not replace authored commits.
