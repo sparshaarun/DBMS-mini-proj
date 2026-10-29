@@ -1,6 +1,6 @@
 # Project Tasks
 
-Status boxes are checked only after the work is committed and reviewed. Complete the phases in order; the user will signal when to continue to the next phase.
+Status boxes are checked only after the work is committed and reviewed. Phase 1 is the shared design checkpoint. Once both members agree on the design and interfaces, Member A and Member B may proceed with independent tasks in parallel; phase numbers group work but do not require one member to wait for the other. Coordinate on shared interfaces and integration points before implementing them.
 
 ## Phase 0 — Repository setup
 
@@ -12,6 +12,31 @@ Status boxes are checked only after the work is committed and reviewed. Complete
 
 - [ ] Finalize the table list, ER diagram, keys, constraints, and relational schema.
 - [ ] Confirm feature ownership and database/API interfaces together.
+
+## Parallel work guide
+
+After Member B reviews the design and both members agree on the shared database/API contracts, tasks can proceed concurrently:
+
+| Member A can work on | Member B can work on | Coordinate before |
+|---|---|---|
+| PostgreSQL scripts, functions, triggers, views, indexes, seeds, and customer/exchange features | MongoDB audit setup, app/auth foundation, merchant/admin features, and dashboard | Agreeing table/column names, exchange function inputs/outputs, auth/session shape, audit event fields, and settlement currency/calculation |
+
+Keep changes in each member's assigned folders and separate feature branches. Agree who owns a shared-file change before editing it. Open independent pull requests and review one another's work; a member can continue independent tasks while another task awaits review.
+
+### Member A task sequence
+
+- [ ] Complete and merge the relational design PR, then agree on shared design decisions with Member B.
+- [ ] Implement PostgreSQL schema scripts and sample data.
+- [ ] Implement database safeguards and the point exchange function.
+- [ ] Implement customer wallet and exchange features against the agreed interfaces.
+- [ ] Implement customer coupon and history features.
+
+### Member B task sequence
+
+- [ ] Review and agree on the relational design and shared database/API contracts.
+- [ ] Implement MongoDB audit model, indexes, and aggregation examples.
+- [ ] Implement app foundation, database connections, authentication, and role checks.
+- [ ] Implement merchant and admin features against the agreed interfaces.
 
 ## Phase 2 — PostgreSQL (Member A)
 
