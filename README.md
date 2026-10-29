@@ -39,6 +39,7 @@ A DBMS mini project for exchanging loyalty points across merchant programs and c
 
    ```bash
    psql -U postgres -d coupon_exchange -f db/postgres/schema.sql
+   psql -U postgres -d coupon_exchange -f db/postgres/alter.sql
    psql -U postgres -d coupon_exchange -f db/postgres/seed.sql
    ```
 
