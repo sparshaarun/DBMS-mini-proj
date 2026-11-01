@@ -1,0 +1,83 @@
+
+[
+  {
+    "eventType": "user_login",
+    "timestamp": "2026-11-01T09:00:00Z",
+    "actor": {
+      "userId": 1,
+      "role": "customer"
+    },
+    "details": {
+      "status": "success"
+    }
+  },
+  {
+    "eventType": "coupon_created",
+    "timestamp": "2026-11-01T09:15:00Z",
+    "actor": {
+      "userId": 2,
+      "role": "merchant"
+    },
+    "details": {
+      "couponId": 101,
+      "merchantId": 1,
+      "title": "Festive 20% Off"
+    }
+  },
+  {
+    "eventType": "coupon_redeemed",
+    "timestamp": "2026-11-01T10:00:00Z",
+    "actor": {
+      "userId": 1,
+      "role": "customer"
+    },
+    "details": {
+      "couponId": 101,
+      "merchantId": 1
+    }
+  },
+  {
+    "eventType": "points_exchanged",
+    "timestamp": "2026-11-01T10:30:00Z",
+    "actor": {
+      "userId": 1,
+      "role": "customer"
+    },
+    "details": {
+      "transactionId": 501,
+      "fromWalletId": 10,
+      "toWalletId": 12,
+      "pointsDebited": 500,
+      "pointsCredited": 450
+    }
+  },
+  {
+    "eventType": "settlement_created",
+    "timestamp": "2026-11-01T11:00:00Z",
+    "actor": {
+      "userId": 3,
+      "role": "admin"
+    },
+    "details": {
+      "settlementId": 301,
+      "debtorMerchantId": 1,
+      "creditorMerchantId": 2,
+      "amount": 2500,
+      "currency": "INR",
+      "status": "pending"
+    }
+  },
+  {
+    "eventType": "coupon_updated",
+    "timestamp": "2026-11-01T11:30:00Z",
+    "actor": {
+      "userId": 2,
+      "role": "merchant"
+    },
+    "details": {
+      "couponId": 101,
+      "merchantId": 1,
+      "updatedField": "status"
+    }
+  }
+]
