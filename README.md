@@ -60,6 +60,8 @@ A DBMS mini project for exchanging loyalty points across merchant programs and c
 
    Open <http://localhost:3000>.
 
+Customer routes include `/wallets`, `/exchange`, `/coupons`, and `/history`. Coupon search uses PostgreSQL full-text search; customer claim and redemption actions call the guarded database functions.
+
 The SQL files, application, and MongoDB setup are added in later project phases. Keep credentials only in your local `.env` file.
 
 ## Project guide
