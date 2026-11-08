@@ -3,6 +3,7 @@
 BEGIN;
 
 DROP TABLE IF EXISTS
+    wallet_balance_audit,
     settlements,
     transactions,
     exchange_rates,

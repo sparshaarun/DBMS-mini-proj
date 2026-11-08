@@ -24,7 +24,7 @@ PostgreSQL is used where constraints and atomic transactions protect shared bala
 
 ## Planned relational tables
 
-The initial design targets these nine tables: `users`, `merchants`, `programs`, `wallets`, `coupons`, `user_coupons`, `exchange_rates`, `transactions`, and `settlements`. The finalized ER diagram, keys, constraints, and data dictionary are Phase 1 deliverables.
+The design has nine core tables: `users`, `merchants`, `programs`, `wallets`, `coupons`, `user_coupons`, `exchange_rates`, `transactions`, and `settlements`. PostgreSQL also has the supporting `wallet_balance_audit` table for the balance-change trigger. See `DB_DESIGN.md` for the ER diagram, keys, constraints, and relational details.
 
 ## Planned MongoDB data
 
