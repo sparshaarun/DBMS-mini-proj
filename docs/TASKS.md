@@ -40,7 +40,7 @@ Keep changes in each member's assigned folders and separate feature branches. Ag
 
 ## Phase 2 — PostgreSQL (Member A)
 
-- [ ] Add create, alter, and reset scripts plus realistic seed data.
+- [x] Add create, alter, and reset scripts plus realistic seed data; apply them successfully to a clean local PostgreSQL test database.
 - [ ] Add transaction/rollback examples, exchange function, trigger safeguards, views, indexes, and coupon full-text search.
 - [ ] Add representative SQL queries and explain the important ones.
 

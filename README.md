@@ -40,8 +40,12 @@ A DBMS mini project for exchanging loyalty points across merchant programs and c
    ```bash
    psql -U postgres -d coupon_exchange -f db/postgres/schema.sql
    psql -U postgres -d coupon_exchange -f db/postgres/alter.sql
+   psql -U postgres -d coupon_exchange -f db/postgres/triggers.sql
+   psql -U postgres -d coupon_exchange -f db/postgres/functions.sql
    psql -U postgres -d coupon_exchange -f db/postgres/seed.sql
    ```
+
+   To demonstrate an exchange that is deliberately undone, run `db/postgres/rollback_demo.sql` after seeding.
 
 5. Install dependencies and start the app after the Next.js application is added in Phase 4:
 
