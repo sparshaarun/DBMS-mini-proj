@@ -1,7 +1,7 @@
 # Relational Database Design
 
 **Owner:** Member A  
-**Status:** Design basis merged in PR #1; settlement formula remains for team agreement
+**Status:** Design basis merged in PR #1; demo settlement rule agreed by both members
 
 ## Design overview
 
@@ -137,7 +137,7 @@ erDiagram
 | `wallet_balance_audit` | `balance_audit_id` PK; `wallet_id` NN FK → `wallets`; `old_balance`, `new_balance` NN CHECK nonnegative and different; `changed_by` nullable FK → `users`; `changed_at` NN default current time. An after-insert/update trigger records opening balances and each actual balance change. |
 | `settlements` | `settlement_id` PK; `debtor_merchant_id`, `creditor_merchant_id` NN FKs → `merchants`; `created_by` NN FK → `users`; `period_start`, `period_end` NN with CHECK start ≤ end; `amount` NN CHECK positive; `currency` NN; `status` NN CHECK in `pending`, `paid`, `cancelled`; `settled_at` nullable and present only when status is `paid`; CHECK debtor differs from creditor. Add a unique key for direction, period, and currency to guard against duplicate settlement runs. |
 
-The transaction amounts preserve the applied rate and settlement amount at exchange time. Later rate changes must not rewrite history. For a cross-merchant exchange, this design convention makes the destination program's merchant the debtor and the source program's merchant the creditor; the amount is supplied by trusted server logic in one configured currency. The exact amount calculation and currency policy must be agreed before the API uses this field for actual settlement.
+The transaction amounts preserve the applied rate and settlement amount at exchange time. Later rate changes must not rewrite history. For a cross-merchant exchange, the destination program's merchant is the debtor and the source program's merchant is the creditor. The agreed simple demo rule is a fixed value per debited source point, stored in environment variables; same-merchant exchanges have no settlement amount.
 
 ## Exchange safety flow
 
@@ -154,7 +154,7 @@ The database CHECK and wallet trigger guard against negative values. The stored 
 
 ## Coupon claim and redemption safety
 
-Claiming checks that a coupon is active and not expired, then locks its row, checks remaining claim capacity, inserts the customer's `user_coupons` row, and increments `claimed_count` in one transaction. The unique key on (`user_id`, `coupon_id`) stops duplicate claims. Redemption updates a claimed row to `redeemed` only when its current status is `claimed`; if no row updates, the coupon is already redeemed or invalid. The status CHECK and timestamp CHECK keep the record consistent.
+`claim_coupon()` checks customer role, active status, expiry, claim capacity, and duplicate ownership while holding a lock on the coupon row. It inserts the claim and increments `claimed_count` in one statement transaction. The unique key on (`user_id`, `coupon_id`) is a second guard against duplicate claims. `redeem_coupon()` locks the customer's claim row and changes it only from `claimed` to `redeemed`; the status CHECK and timestamp CHECK keep the record consistent. A repeated redemption is rejected.
 
 ## Decisions to confirm before settlement integration
 
@@ -163,4 +163,8 @@ Claiming checks that a coupon is active and not expired, then locks its row, che
 - Whether merchant profiles are created only by an admin or during merchant registration.
 - The current nearest-whole-point rounding rule and which currency codes the mini project will support.
 
-The point rounding rule is currently nearest whole point. The settlement currency and calculation still require team agreement before the API uses settlement amounts for real merchant obligations. The function accepts a settlement amount from trusted server logic and rejects zero for cross-merchant exchanges; it does not define the monetary formula.
+The demo uses nearest-whole-point rounding and INR 0.10 per debited source point. The API reads the amount and currency settings from the server environment, never from the browser. Revisit the amount before using it for anything beyond the mini-project demo.
+
+## Views, indexes, and query examples
+
+`views_indexes.sql` defines customer wallet balances, coupon redemption summaries, and merchant settlement summaries. It adds indexes for transaction history, settlement lookups, and PostgreSQL full-text coupon search. `queries.sql` demonstrates INSERT, UPDATE, DELETE (inside a rollback block), SELECT, JOIN, GROUP BY, HAVING, ORDER BY, aggregates, a `NOT EXISTS` subquery, coupon search, and balance audit history.

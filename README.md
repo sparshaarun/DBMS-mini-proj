@@ -35,6 +35,8 @@ A DBMS mini project for exchanging loyalty points across merchant programs and c
 
 3. Fill in `.env` with your local PostgreSQL and MongoDB connection details and a long random JWT secret. Never commit `.env`.
 
+   The agreed demo settlement policy uses INR 0.10 per debited source point. The destination merchant owes the source merchant; exchanges between programs of one merchant have no settlement amount.
+
 4. Create a PostgreSQL database, then apply the SQL files as they are added in Phase 2. For example:
 
    ```bash
@@ -42,7 +44,9 @@ A DBMS mini project for exchanging loyalty points across merchant programs and c
    psql -U postgres -d coupon_exchange -f db/postgres/alter.sql
    psql -U postgres -d coupon_exchange -f db/postgres/triggers.sql
    psql -U postgres -d coupon_exchange -f db/postgres/functions.sql
+   psql -U postgres -d coupon_exchange -f db/postgres/views_indexes.sql
    psql -U postgres -d coupon_exchange -f db/postgres/seed.sql
+   psql -U postgres -d coupon_exchange -f db/postgres/queries.sql
    ```
 
    To demonstrate an exchange that is deliberately undone, run `db/postgres/rollback_demo.sql` after seeding.

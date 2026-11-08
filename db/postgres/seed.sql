@@ -75,6 +75,19 @@ JOIN coupons c ON c.title = 'Free pastry with any drink'
 WHERE u.email = 'asha@example.test'
 ON CONFLICT DO NOTHING;
 
+INSERT INTO user_coupons (user_id, coupon_id, status, redeemed_at)
+SELECT u.user_id, c.coupon_id, 'redeemed', CURRENT_TIMESTAMP
+FROM users u
+JOIN coupons c ON c.title = '10% off a paperback'
+WHERE u.email = 'ravi@example.test'
+ON CONFLICT DO NOTHING;
+
+-- Keep the cached claim totals aligned with the sample claim rows.
+UPDATE coupons c
+   SET claimed_count = (
+       SELECT COUNT(*) FROM user_coupons uc WHERE uc.coupon_id = c.coupon_id
+   );
+
 INSERT INTO exchange_rates (from_program_id, to_program_id, rate)
 SELECT source.program_id, destination.program_id, 1.000000
 FROM programs source CROSS JOIN programs destination
