@@ -161,4 +161,124 @@ BEGIN
 END;
 $$;
 
+-- Claim a coupon once, while locking it so limited stock cannot be oversold.
+CREATE OR REPLACE FUNCTION claim_coupon(
+    p_user_id BIGINT,
+    p_coupon_id BIGINT
+)
+RETURNS BIGINT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_coupon_status TEXT;
+    v_expires_on DATE;
+    v_max_claims BIGINT;
+    v_claimed_count BIGINT;
+    v_user_coupon_id BIGINT;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM users WHERE user_id = p_user_id AND role = 'customer'
+    ) THEN
+        RAISE EXCEPTION 'Only a registered customer can claim a coupon'
+            USING ERRCODE = '42501';
+    END IF;
+
+    SELECT status, expires_on, max_claims, claimed_count
+      INTO v_coupon_status, v_expires_on, v_max_claims, v_claimed_count
+      FROM coupons
+     WHERE coupon_id = p_coupon_id
+     FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Coupon was not found'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM user_coupons
+        WHERE user_id = p_user_id AND coupon_id = p_coupon_id
+    ) THEN
+        RAISE EXCEPTION 'You have already claimed this coupon'
+            USING ERRCODE = '23505';
+    END IF;
+
+    IF v_coupon_status <> 'active' OR v_expires_on < CURRENT_DATE THEN
+        RAISE EXCEPTION 'This coupon is inactive or expired'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    IF v_max_claims IS NOT NULL AND v_claimed_count >= v_max_claims THEN
+        RAISE EXCEPTION 'This coupon has reached its claim limit'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    INSERT INTO user_coupons (user_id, coupon_id)
+    VALUES (p_user_id, p_coupon_id)
+    RETURNING user_coupon_id INTO v_user_coupon_id;
+
+    UPDATE coupons
+       SET claimed_count = claimed_count + 1
+     WHERE coupon_id = p_coupon_id;
+
+    RETURN v_user_coupon_id;
+END;
+$$;
+
+-- Redeem only a claimed coupon owned by this customer, and only once.
+CREATE OR REPLACE FUNCTION redeem_coupon(
+    p_user_id BIGINT,
+    p_user_coupon_id BIGINT
+)
+RETURNS BIGINT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_coupon_id BIGINT;
+    v_claim_status TEXT;
+    v_coupon_status TEXT;
+    v_expires_on DATE;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM users WHERE user_id = p_user_id AND role = 'customer'
+    ) THEN
+        RAISE EXCEPTION 'Only a registered customer can redeem a coupon'
+            USING ERRCODE = '42501';
+    END IF;
+
+    SELECT coupon_id, status
+      INTO v_coupon_id, v_claim_status
+      FROM user_coupons
+     WHERE user_coupon_id = p_user_coupon_id AND user_id = p_user_id
+     FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Claimed coupon was not found for this customer'
+            USING ERRCODE = '42501';
+    END IF;
+
+    IF v_claim_status <> 'claimed' THEN
+        RAISE EXCEPTION 'This coupon has already been redeemed or expired'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    SELECT status, expires_on
+      INTO v_coupon_status, v_expires_on
+      FROM coupons
+     WHERE coupon_id = v_coupon_id
+     FOR SHARE;
+
+    IF v_coupon_status <> 'active' OR v_expires_on < CURRENT_DATE THEN
+        RAISE EXCEPTION 'This coupon is inactive or expired'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE user_coupons
+       SET status = 'redeemed', redeemed_at = CURRENT_TIMESTAMP
+     WHERE user_coupon_id = p_user_coupon_id AND user_id = p_user_id
+       AND status = 'claimed';
+
+    RETURN p_user_coupon_id;
+END;
+$$;
+
 COMMIT;
