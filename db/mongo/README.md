@@ -27,12 +27,25 @@ Each audit document contains:
 
 ## Supported Events
 
+The audit infrastructure supports event documents with a flexible `eventType` field.
+
+The sample events demonstrate:
+
 1. user_login
 2. coupon_created
 3. coupon_updated
 4. coupon_redeemed
 5. points_exchanged
 6. settlement_created
+
+The current merchant/admin application records:
+
+1. merchant_status_updated
+2. coupon_created
+3. coupon_updated
+4. settlement_status_updated
+
+Additional customer and exchange event logging can be integrated through the same audit document structure.
 
 ## Indexes
 
