@@ -2,62 +2,70 @@
 
 ## Idea
 
-Digital Coupon Clearinghouse & Loyalty Points Exchange lets customers hold points from several merchant loyalty programs, exchange points using configured rates, and claim and redeem digital coupons. Administrators manage merchants, programs, rates, and settlement. The system must prevent negative balances and prevent a coupon from being redeemed more than once.
+Digital Coupon Clearinghouse & Loyalty Points Exchange allows customers to hold points from multiple merchant loyalty programs, exchange points using configured rates, and claim and redeem digital coupons.
+
+The system uses PostgreSQL for relational business data and MongoDB for application audit events.
 
 ## Users and roles
 
-- **Customer:** view wallets, preview and exchange points, search and filter coupons, claim and redeem coupons, and review activity.
-- **Merchant:** manage its own coupons, review redemptions, and view its settlement summary.
-- **Admin:** manage merchants and exchange rates, run settlements, and review dashboard metrics and audit activity.
+- **Customer:** View wallets, preview and exchange points, search and filter coupons, claim and redeem coupons, and review activity.
+- **Merchant:** Manage its own coupons, review redemptions, and view settlement information.
+- **Admin:** Manage merchants, monitor platform coupons, review audit activity, view dashboard metrics, and manage settlements.
 
-Backend route handlers enforce authentication and role permissions. Hiding a page or button is not an access control check.
+Backend route handlers enforce authentication and role permissions.
 
 ## Technology choices
 
-- Next.js App Router, Tailwind CSS, and Route Handlers for the application and API.
-- PostgreSQL with the `pg` library and raw SQL for relational data, balances, exchanges, redemptions, and settlement.
-- MongoDB for append-only audit and activity events such as login, exchange, and redemption.
-- bcrypt for password hashing and JWT stored in an httpOnly cookie for sessions.
-- Credentials and secrets come from environment variables; `.env` is local and untracked.
+- Next.js App Router and Tailwind CSS.
+- PostgreSQL with the `pg` library and parameterized SQL.
+- MongoDB for audit and activity events.
+- bcrypt for password hashing.
+- JWT sessions stored in httpOnly cookies.
+- Environment variables for database connections and secrets.
 
-PostgreSQL is used where constraints and atomic transactions protect shared balances and coupon state. MongoDB is used for flexible event documents and audit history.
+## Database architecture
 
-## Planned relational tables
+PostgreSQL stores:
+- Users and merchant profiles.
+- Loyalty programs and wallets.
+- Coupons and customer coupon claims.
+- Exchange rates and point transactions.
+- Merchant settlements.
+- Wallet balance audit records.
 
-The design has nine core tables: `users`, `merchants`, `programs`, `wallets`, `coupons`, `user_coupons`, `exchange_rates`, `transactions`, and `settlements`. PostgreSQL also has the supporting `wallet_balance_audit` table for the balance-change trigger. See `DB_DESIGN.md` for the ER diagram, keys, constraints, and relational details.
+MongoDB stores application audit events in the `audit_logs` collection.
 
-## Planned MongoDB data
+The MongoDB audit document contains an event type, timestamp, actor information, and event-specific details.
 
-The `audit_logs` collection records relevant events with an event type, timestamp, actor, and safe event details. The exact document shape, indexes, and dashboard aggregation examples will be finalized in Phase 3. Do not put passwords or JWTs in logs.
+See `DB_DESIGN.md` and `MEMBER_B_IMPLEMENTATION.md` for details.
 
-## Folder structure
+## Application structure
 
-```text
-app/
-  api/                 # Route Handlers
-  (auth)/              # Login and registration pages
-  (customer)/          # Customer pages
-  (merchant)/          # Merchant pages
-  (admin)/             # Admin pages
-db/
-  postgres/            # PostgreSQL schema, functions, seeds, and queries
-  mongo/               # MongoDB setup and aggregation examples
-docs/                  # Project, team, task, and contribution documents
-lib/                   # Database connections, auth, validation, and shared helpers
-```
-
-Role-specific page groups and feature folders are assigned in `TEAM_SPLIT.md` to keep parallel work apart.
+- `app/api/auth/`: Authentication endpoints.
+- `app/api/customer/`: Customer endpoints.
+- `app/api/merchant/`: Merchant endpoints.
+- `app/api/admin/`: Administrator endpoints.
+- `app/(merchant)/`: Merchant interface.
+- `app/(admin)/`: Administrator interface.
+- `lib/`: Database connections, authentication, and shared helpers.
+- `db/postgres/`: PostgreSQL scripts.
+- `db/mongo/`: MongoDB setup and aggregation examples.
+- `docs/`: Project and implementation documentation.
 
 ## Conventions
 
-- Use raw parameterized SQL through `pg`; no ORM.
-- Keep route handlers small and validate inputs before database writes.
-- Put secrets in environment variables; update `.env.example` when adding a variable.
-- Use clear names and short comments that explain non-obvious code.
-- Keep database safeguards in PostgreSQL as well as API checks.
-- Use small commits with a clear scope, such as `feat(db): add exchange_points function`.
-- Coordinate shared interfaces through documentation and review; do not edit another member's owned files without agreement.
+- Use parameterized SQL through `pg`.
+- Validate input before database writes.
+- Enforce authorization on the backend.
+- Keep secrets in environment variables.
+- Keep database safeguards in PostgreSQL.
+- Use small, meaningful Git commits.
+- Coordinate changes to shared files and database interfaces.
 
-## Phase plan
+## Team ownership
 
-See `TASKS.md` for the staged checklist. Each phase is completed and reviewed before moving to the next one.
+Member A owns PostgreSQL implementation and customer/exchange features.
+
+Member B owns MongoDB audit infrastructure, authentication, shared backend foundations, merchant features, and administrator features.
+
+See `TEAM_SPLIT.md` for details.
