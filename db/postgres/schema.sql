@@ -94,7 +94,7 @@ CREATE TABLE transactions (
     exchange_rate_id BIGINT NOT NULL REFERENCES exchange_rates(exchange_rate_id),
     points_debited BIGINT NOT NULL CHECK (points_debited > 0),
     points_credited BIGINT NOT NULL CHECK (points_credited > 0),
-    -- Settlement policy must be confirmed by both teammates.
+    -- Snapshot of the agreed settlement amount for this exchange.
     settlement_amount NUMERIC(14, 2) NOT NULL CHECK (settlement_amount >= 0),
     settlement_currency CHAR(3) NOT NULL CHECK (settlement_currency ~ '^[A-Z]{3}$'),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -112,6 +112,7 @@ CREATE TABLE settlements (
     debtor_merchant_id BIGINT NOT NULL REFERENCES merchants(merchant_id),
     creditor_merchant_id BIGINT NOT NULL REFERENCES merchants(merchant_id),
     created_by BIGINT NOT NULL REFERENCES users(user_id),
+    -- Monthly aggregate for one debtor/creditor direction and currency.
     period_start DATE NOT NULL,
     period_end DATE NOT NULL,
     amount NUMERIC(14, 2) NOT NULL CHECK (amount > 0),

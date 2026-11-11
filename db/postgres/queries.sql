@@ -41,6 +41,15 @@ JOIN programs destination ON destination.program_id = t.to_program_id
 WHERE t.user_id = (SELECT user_id FROM users WHERE email = 'asha@example.test')
 ORDER BY t.created_at DESC;
 
+-- Monthly merchant settlement totals, including both directions for a merchant.
+SELECT s.settlement_id, debtor.business_name AS debtor,
+       creditor.business_name AS creditor, s.period_start, s.period_end,
+       s.amount, s.currency, s.status
+FROM settlements s
+JOIN merchants debtor ON debtor.merchant_id = s.debtor_merchant_id
+JOIN merchants creditor ON creditor.merchant_id = s.creditor_merchant_id
+ORDER BY s.period_start DESC, debtor.business_name, creditor.business_name;
+
 -- GROUP BY and aggregates: points held by each customer across programs.
 SELECT u.user_id, u.full_name, SUM(w.balance) AS total_points,
        COUNT(w.wallet_id) AS wallet_count, AVG(w.balance) AS average_wallet_balance

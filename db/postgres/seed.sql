@@ -100,7 +100,7 @@ FROM programs source CROSS JOIN programs destination
 WHERE source.program_name = 'Harbor Perks' AND destination.program_name = 'Bean & Book Rewards'
 ON CONFLICT DO NOTHING;
 
--- Illustrative only: the settlement amount/currency policy is provisional pending team agreement.
+-- Illustrative exchange history; functions.sql backfills its monthly settlement total.
 INSERT INTO transactions
     (user_id, from_wallet_id, from_program_id, to_wallet_id, to_program_id,
      exchange_rate_id, points_debited, points_credited, settlement_amount, settlement_currency)

@@ -24,6 +24,9 @@ DECLARE
     v_source_merchant_id BIGINT;
     v_destination_merchant_id BIGINT;
     v_transaction_id BIGINT;
+    v_settlement_id BIGINT;
+    v_period_start DATE;
+    v_period_end DATE;
 BEGIN
     IF p_points_debited IS NULL OR p_points_debited <= 0 THEN
         RAISE EXCEPTION 'Points to exchange must be a positive whole number'
@@ -157,9 +160,83 @@ BEGIN
     )
     RETURNING transaction_id INTO v_transaction_id;
 
+    -- Keep one pending settlement total per merchant direction, month, and currency.
+    -- Destination merchant owes the source merchant under the agreed demo policy.
+    IF v_destination_merchant_id <> v_source_merchant_id THEN
+        v_period_start := date_trunc('month', CURRENT_DATE)::DATE;
+        v_period_end := (date_trunc('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day')::DATE;
+
+        INSERT INTO settlements (
+            debtor_merchant_id,
+            creditor_merchant_id,
+            created_by,
+            period_start,
+            period_end,
+            amount,
+            currency
+        ) VALUES (
+            v_destination_merchant_id,
+            v_source_merchant_id,
+            p_user_id,
+            v_period_start,
+            v_period_end,
+            p_settlement_amount,
+            p_settlement_currency
+        )
+        ON CONFLICT ON CONSTRAINT settlements_period_direction_currency_uk
+        DO UPDATE SET amount = settlements.amount + EXCLUDED.amount
+        WHERE settlements.status = 'pending'
+        RETURNING settlement_id INTO v_settlement_id;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'This month settlement has already been finalized'
+                USING ERRCODE = 'P0001';
+        END IF;
+    END IF;
+
     RETURN v_transaction_id;
 END;
 $$;
+
+-- Reconcile transactions created before settlement generation was added. This
+-- aggregate is idempotent: pending totals are set from transaction history rather
+-- than incremented, so reapplying this script cannot double-count old exchanges.
+INSERT INTO settlements (
+    debtor_merchant_id,
+    creditor_merchant_id,
+    created_by,
+    period_start,
+    period_end,
+    amount,
+    currency
+)
+SELECT monthly.debtor_merchant_id,
+       monthly.creditor_merchant_id,
+       monthly.created_by,
+       monthly.period_start,
+       (monthly.period_start + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
+       monthly.amount,
+       monthly.currency
+FROM (
+    SELECT destination.merchant_id AS debtor_merchant_id,
+           source.merchant_id AS creditor_merchant_id,
+           (ARRAY_AGG(t.user_id ORDER BY t.created_at, t.transaction_id))[1] AS created_by,
+           date_trunc('month', t.created_at)::DATE AS period_start,
+           SUM(t.settlement_amount)::NUMERIC(14, 2) AS amount,
+           t.settlement_currency AS currency
+    FROM transactions t
+    JOIN programs source ON source.program_id = t.from_program_id
+    JOIN programs destination ON destination.program_id = t.to_program_id
+    WHERE source.merchant_id <> destination.merchant_id
+      AND t.settlement_amount > 0
+    GROUP BY destination.merchant_id,
+             source.merchant_id,
+             date_trunc('month', t.created_at)::DATE,
+             t.settlement_currency
+) AS monthly
+ON CONFLICT ON CONSTRAINT settlements_period_direction_currency_uk
+DO UPDATE SET amount = EXCLUDED.amount
+WHERE settlements.status = 'pending';
 
 -- Claim a coupon once, while locking it so limited stock cannot be oversold.
 CREATE OR REPLACE FUNCTION claim_coupon(

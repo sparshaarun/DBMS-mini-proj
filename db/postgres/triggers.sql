@@ -137,4 +137,27 @@ BEFORE INSERT ON transactions
 FOR EACH ROW
 EXECUTE FUNCTION validate_exchange_transaction();
 
+-- Monthly settlement totals stay open while new exchanges can still accrue.
+CREATE OR REPLACE FUNCTION guard_settlement_period_close()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF OLD.status = 'pending'
+       AND NEW.status IN ('paid', 'cancelled')
+       AND NEW.period_end >= CURRENT_DATE THEN
+        RAISE EXCEPTION 'A monthly settlement can only be paid or cancelled after its period ends'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS settlements_period_close_guard_trg ON settlements;
+CREATE TRIGGER settlements_period_close_guard_trg
+BEFORE UPDATE OF status ON settlements
+FOR EACH ROW
+EXECUTE FUNCTION guard_settlement_period_close();
+
 COMMIT;
