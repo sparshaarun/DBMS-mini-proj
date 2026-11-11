@@ -76,13 +76,14 @@ export async function PATCH(request) {
            settled_at = CASE WHEN $1 = 'paid' THEN NOW() ELSE NULL END
        WHERE settlement_id = $2
          AND status = 'pending'
+         AND period_end < CURRENT_DATE
        RETURNING settlement_id, status, settled_at`,
       [status, settlementId]
     );
 
     if (result.rowCount === 0) {
       return NextResponse.json(
-        { error: "Settlement not found or is no longer pending" },
+        { error: "Settlement not found, already finalized, or its month is still open" },
         { status: 409 }
       );
     }
@@ -95,6 +96,12 @@ export async function PATCH(request) {
     return NextResponse.json({ settlement: result.rows[0] });
   } catch (error) {
     console.error("Admin settlement update failed:", error.message);
+    if (error.code === "P0001") {
+      return NextResponse.json(
+        { error: "This monthly settlement cannot be finalized before its period ends" },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: "Unable to update settlement" },
       { status: 500 }

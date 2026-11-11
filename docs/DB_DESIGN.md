@@ -135,35 +135,36 @@ erDiagram
 | `exchange_rates` | `exchange_rate_id` PK; `from_program_id`, `to_program_id` NN FKs → `programs`; `rate` NN CHECK `rate > 0`; `active` NN default true; `updated_at` NN default current time; UK (`from_program_id`, `to_program_id`); CHECK source and destination differ. A rate means credited destination points per one debited source point. |
 | `transactions` | `transaction_id` PK; `user_id`, `from_wallet_id`, `to_wallet_id`, `exchange_rate_id` NN FKs; `points_debited` NN CHECK positive; `points_credited` NN CHECK positive; `settlement_amount` NN CHECK nonnegative; `settlement_currency` NN; `created_at` NN default current time. A trigger verifies both wallets belong to `user_id` and the rate's programs match the wallet programs. One row records a completed exchange; never insert it before the atomic balance update succeeds. |
 | `wallet_balance_audit` | `balance_audit_id` PK; `wallet_id` NN FK → `wallets`; `old_balance`, `new_balance` NN CHECK nonnegative and different; `changed_by` nullable FK → `users`; `changed_at` NN default current time. An after-insert/update trigger records opening balances and each actual balance change. |
-| `settlements` | `settlement_id` PK; `debtor_merchant_id`, `creditor_merchant_id` NN FKs → `merchants`; `created_by` NN FK → `users`; `period_start`, `period_end` NN with CHECK start ≤ end; `amount` NN CHECK positive; `currency` NN; `status` NN CHECK in `pending`, `paid`, `cancelled`; `settled_at` nullable and present only when status is `paid`; CHECK debtor differs from creditor. Add a unique key for direction, period, and currency to guard against duplicate settlement runs. |
+| `settlements` | `settlement_id` PK; `debtor_merchant_id`, `creditor_merchant_id` NN FKs → `merchants`; `created_by` NN FK → `users` (customer whose exchange first created the monthly aggregate); `period_start`, `period_end` NN with CHECK start ≤ end; `amount` NN CHECK positive; `currency` NN; `status` NN CHECK in `pending`, `paid`, `cancelled`; `settled_at` nullable and present only when status is `paid`; CHECK debtor differs from creditor. UK (debtor, creditor, period start, period end, currency) ensures one monthly aggregate per direction and currency. |
 
-The transaction amounts preserve the applied rate and settlement amount at exchange time. Later rate changes must not rewrite history. For a cross-merchant exchange, the destination program's merchant is the debtor and the source program's merchant is the creditor. The agreed simple demo rule is a fixed value per debited source point, stored in environment variables; same-merchant exchanges have no settlement amount.
+The transaction amounts preserve the applied rate and settlement amount at exchange time. Later rate changes must not rewrite history. For a cross-merchant exchange, the destination program's merchant is the debtor and the source program's merchant is the creditor. The agreed simple demo rule is INR 0.10 per debited source point; same-merchant exchanges have no settlement amount.
 
 ## Exchange safety flow
 
 1. Begin one PostgreSQL transaction.
 2. Lock the customer's source and destination wallet rows in a consistent order.
 3. Confirm both wallets belong to the customer, the rate is active and matches those programs, and the source balance is sufficient.
-4. Calculate credited points using the stored rate and round to the nearest whole point. Trusted server logic supplies the settlement amount until the team agrees on its formula.
-5. Debit and credit the wallets, then insert one `transactions` row.
-6. Commit. If a check or write fails, roll back so neither balance changes alone.
+4. Calculate credited points using the stored rate and round to the nearest whole point. Trusted server logic supplies the settlement amount and currency.
+5. Debit and credit the wallets, insert one `transactions` row, then add the amount to the pending settlement for that debtor, creditor, calendar month, and currency. A unique-key upsert serializes concurrent exchanges into the same aggregate.
+6. Commit. If any check or write fails, roll back both wallet changes, the transaction, and the settlement update together.
 
-The database CHECK and wallet trigger guard against negative values. The stored function locks both wallets in ID order, makes both balance updates and the transaction insert in one statement transaction, and records wallet balance changes in `wallet_balance_audit`. If an exception occurs, PostgreSQL rolls back the function statement, including both updates and its audit rows.
+The database CHECK and wallet trigger guard against negative values. The stored function locks both wallets in ID order, makes both balance updates, transaction insert, and settlement upsert in one statement transaction, and records wallet balance changes in `wallet_balance_audit`. If an exception occurs, PostgreSQL rolls back all of those writes together.
 
-`db/postgres/rollback_demo.sql` wraps a sample exchange in `BEGIN` and `ROLLBACK`. It demonstrates that both balances, the transaction row, and the corresponding audit rows are undone together.
+`db/postgres/rollback_demo.sql` wraps a sample exchange in `BEGIN` and `ROLLBACK`. It demonstrates that both balances, the transaction row, the monthly settlement total, and the corresponding audit rows are undone together. `functions.sql` also backfills historical cross-merchant transactions into monthly pending totals when applied; rerunning the script recomputes pending totals from transaction history without double-counting.
+
+Monthly totals remain pending during their month. A database trigger rejects paid or cancelled status changes until `period_end` is before the current date, so active monthly totals cannot be finalized while new exchanges may still accrue. Merchant and admin views read the aggregate rows; admin status actions should report this database rejection as a conflict.
 
 ## Coupon claim and redemption safety
 
 `claim_coupon()` checks customer role, active status, expiry, claim capacity, and duplicate ownership while holding a lock on the coupon row. It inserts the claim and increments `claimed_count` in one statement transaction. The unique key on (`user_id`, `coupon_id`) is a second guard against duplicate claims. `redeem_coupon()` locks the customer's claim row and changes it only from `claimed` to `redeemed`; the status CHECK and timestamp CHECK keep the record consistent. A repeated redemption is rejected.
 
-## Decisions to confirm before settlement integration
+## Other project decisions
 
-- Settlement currency and how the agreed per-exchange settlement value is calculated.
-- Whether coupon claiming is limited to one claim per customer (this design says yes) and whether claims consume loyalty points (this design does not charge points).
-- Whether merchant profiles are created only by an admin or during merchant registration.
-- The current nearest-whole-point rounding rule and which currency codes the mini project will support.
+- Coupon claiming is limited to one claim per customer and does not consume loyalty points.
+- Merchant profile creation is handled by the agreed application flow.
+- Exchanges round credited points to the nearest whole point.
 
-The demo uses nearest-whole-point rounding and INR 0.10 per debited source point. The API reads the amount and currency settings from the server environment, never from the browser. Revisit the amount before using it for anything beyond the mini-project demo.
+The demo uses nearest-whole-point rounding and INR 0.10 per debited source point. The API reads the amount and currency settings from the server environment, never from the browser. This policy is for the mini-project demo.
 
 ## Views, indexes, and query examples
 
