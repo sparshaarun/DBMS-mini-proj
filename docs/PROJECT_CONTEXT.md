@@ -10,7 +10,7 @@ The system uses PostgreSQL for relational business data and MongoDB for applicat
 
 - **Customer:** View wallets, preview and exchange points, search and filter coupons, claim and redeem coupons, and review activity.
 - **Merchant:** Manage its own coupons, review redemptions, and view settlement information.
-- **Admin:** Manage merchants, monitor platform coupons, review audit activity, view dashboard metrics, and manage settlements.
+- **Admin:** Manage merchants and exchange rates, monitor platform coupons, review audit activity, view dashboard summaries, and pay or cancel closed-period settlements.
 
 Backend route handlers enforce authentication and role permissions.
 
@@ -35,7 +35,7 @@ PostgreSQL stores:
 
 MongoDB stores application audit events in the `audit_logs` collection.
 
-The MongoDB audit document contains an event type, timestamp, actor information, and event-specific details.
+The MongoDB audit document contains an event type, timestamp, actor information, and event-specific details. Successful logins, point exchanges, coupon redemptions, and administrator changes are recorded as best-effort audit events without passwords or tokens.
 
 See `DB_DESIGN.md` and `MEMBER_B_IMPLEMENTATION.md` for details.
 
@@ -45,8 +45,9 @@ See `DB_DESIGN.md` and `MEMBER_B_IMPLEMENTATION.md` for details.
 - `app/api/customer/`: Customer endpoints.
 - `app/api/merchant/`: Merchant endpoints.
 - `app/api/admin/`: Administrator endpoints.
+- `app/(auth)/`: Customer registration page; `/` is the sign-in page.
 - `app/(merchant)/`: Merchant interface.
-- `app/(admin)/`: Administrator interface.
+- `app/(admin)/`: Administrator interface, including exchange-rate management.
 - `lib/`: Database connections, authentication, and shared helpers.
 - `db/postgres/`: PostgreSQL scripts.
 - `db/mongo/`: MongoDB setup and aggregation examples.

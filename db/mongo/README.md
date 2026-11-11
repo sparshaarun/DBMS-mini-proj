@@ -38,14 +38,17 @@ The sample events demonstrate:
 5. points_exchanged
 6. settlement_created
 
-The current merchant/admin application records:
+The current application records:
 
-1. merchant_status_updated
-2. coupon_created
-3. coupon_updated
-4. settlement_status_updated
+1. user_login (successful login only)
+2. points_exchanged
+3. coupon_redeemed
+4. merchant_status_updated
+5. coupon_created and coupon_updated
+6. settlement_status_updated
+7. exchange_rate_updated and exchange_rate_status_updated
 
-Additional customer and exchange event logging can be integrated through the same audit document structure.
+Audit writes are best effort. A MongoDB outage does not undo a successful PostgreSQL business transaction or block login.
 
 ## Indexes
 

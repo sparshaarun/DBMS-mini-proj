@@ -40,7 +40,7 @@ MongoDB indexes support audit event lookup and chronological retrieval.
 
 Aggregation examples group audit events by event type and summarize platform activity.
 
-The application records administrator merchant-status changes and merchant coupon updates. Audit failures are logged without exposing sensitive credentials.
+The application records successful logins, point exchanges, coupon redemptions, merchant-status changes, merchant coupon updates, exchange-rate changes, and settlement-status changes. Audit failures are logged without exposing sensitive credentials and do not undo successful PostgreSQL operations.
 
 Passwords and JWTs must never be stored in audit documents.
 
@@ -56,6 +56,7 @@ Shared backend modules:
 Authentication features:
 
 - User registration.
+- Customer registration page at `/register` and sign-in page at `/`.
 - Password hashing using bcrypt.
 - Login and logout.
 - JWT session handling through an httpOnly cookie.
@@ -102,6 +103,7 @@ Implemented pages:
 
 - `/admin`: platform dashboard.
 - `/admin/merchants`: merchant management.
+- `/admin/rates`: create, update, enable, or disable exchange rates.
 - `/admin/coupons`: platform-wide coupon oversight.
 - `/admin/audit`: MongoDB audit activity.
 - `/admin/settlements`: settlement management.
@@ -113,6 +115,9 @@ Administrator APIs:
 | `/api/admin/dashboard` | GET | Platform metrics and recent audit activity |
 | `/api/admin/merchants` | GET | List registered merchants |
 | `/api/admin/merchants` | PATCH | Activate or deactivate a merchant |
+| `/api/admin/rates` | GET | List active programs and configured rates |
+| `/api/admin/rates` | POST | Create or update a directional program rate |
+| `/api/admin/rates` | PATCH | Enable or disable a rate |
 | `/api/admin/coupons` | GET | View platform-wide coupons |
 | `/api/admin/audit` | GET | Retrieve and filter audit events |
 | `/api/admin/settlements` | GET | Retrieve settlement records |
@@ -122,7 +127,7 @@ All administrator APIs use backend role checks.
 
 Settlement status updates are restricted to pending records. A paid settlement receives a settlement timestamp, while a cancelled settlement has no settlement timestamp.
 
-Administrator changes are recorded in MongoDB audit logs.
+Settlement totals are grouped by debtor, creditor, calendar month, and currency. Admin status actions are allowed only after the period ends. Administrator changes are recorded in MongoDB audit logs. The dashboard shows merchant and coupon status as simple horizontal bar charts.
 
 ## 6. Testing Performed
 
@@ -135,7 +140,7 @@ The following checks have been performed during local development:
 | Login | Invalid credentials | Passed |
 | Registration | Duplicate account | Passed |
 | Authentication | Logout | Passed |
-| Authorization | Role-restricted API access | Passed |
+| Authorization | Role-restricted API access | Passed, including the final non-admin admin-API rejection check |
 | Merchant dashboard | Load merchant metrics | Passed |
 | Merchant coupons | Create and update coupon | Passed |
 | Merchant redemptions | Load redemption page | Passed |
@@ -145,23 +150,17 @@ The following checks have been performed during local development:
 | Admin merchants | Deactivate and reactivate merchant | Passed |
 | Admin coupons | Load platform-wide coupon list | Passed |
 | Admin audit | Retrieve and filter audit events | Passed |
-| Admin settlements | Load empty settlement state | Passed |
-| Production build | Run `npm run build` | Passed repeatedly |
+| Admin exchange rates | Create/update and enable/disable rates | Passed; admin actions succeeded and non-admin access was rejected |
+| Admin settlements | Load settlement records and update closed periods | Passed in the settlement integration check |
+| Production build | Run `npm run build` | Passed on the project machine after PR #10 |
 
-### Remaining integration tests
-
-- Generate a genuine cross-merchant point exchange that creates a settlement.
-- Verify the administrator can mark that pending settlement as paid or cancelled.
-- Verify the settlement status change appears in MongoDB audit logs.
-- Complete the team's combined end-to-end test cases.
-
-An empty settlement table is expected when no cross-merchant settlement has been generated. The settlement status transition has not yet been verified against a real record.
+Member B completed the final non-admin authorization and combined integration checks. Detailed results are recorded in [`TEST_RESULTS.md`](TEST_RESULTS.md).
 
 ## 7. Security and Configuration
 
 Configuration is supplied through environment variables.
 
-The local `.env.local` file must not be committed.
+The local `.env` file must not be committed.
 
 The `.env.example` file documents the required configuration without containing real secrets.
 

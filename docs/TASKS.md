@@ -6,12 +6,12 @@ Status boxes are checked only after the work is committed and reviewed. Phase 1 
 
 - [x] Add README, project context, team split, task checklist, and contribution workflow.
 - [x] Add `.env.example` and ignore local secrets and generated files.
-- [ ] Push the starter repository to GitHub and have Member B clone it.
+- [x] Push the starter repository to GitHub and have Member B clone it.
 
 ## Phase 1 — Relational design and finalized split
 
-- [ ] Finalize the table list, ER diagram, keys, constraints, and relational schema.
-- [ ] Confirm feature ownership and database/API interfaces together.
+- [x] Finalize the table list, ER diagram, keys, constraints, and relational schema.
+- [x] Confirm feature ownership and database/API interfaces together.
 
 ## Parallel work guide
 
@@ -25,45 +25,49 @@ Keep changes in each member's assigned folders and separate feature branches. Ag
 
 ### Member A task sequence
 
-- [ ] Complete and merge the relational design PR, then agree on shared design decisions with Member B.
-- [ ] Implement PostgreSQL schema scripts and sample data.
-- [ ] Implement database safeguards and the point exchange function.
-- [ ] Implement customer wallet and exchange features against the agreed interfaces.
-- [ ] Implement customer coupon and history features.
+- [x] Complete and merge the relational design PR, then agree on shared design decisions with Member B.
+- [x] Implement PostgreSQL schema scripts and sample data.
+- [x] Implement database safeguards and the point exchange function.
+- [x] Implement customer wallet and exchange features against the agreed interfaces.
+- [x] Implement customer coupon and history features.
 
 ### Member B task sequence
 
-- [ ] Review and agree on the relational design and shared database/API contracts.
-- [ ] Implement MongoDB audit model, indexes, and aggregation examples.
-- [ ] Implement app foundation, database connections, authentication, and role checks.
-- [ ] Implement merchant and admin features against the agreed interfaces.
+- [x] Review and agree on the relational design and shared database/API contracts.
+- [x] Implement MongoDB audit model, indexes, and aggregation examples.
+- [x] Implement app foundation, database connections, authentication, and role checks.
+- [x] Implement merchant and admin features against the agreed interfaces.
+- [ ] Add the admin exchange-rate management page and audit event (implemented on the current feature branch; awaiting review/merge).
 
 ## Phase 2 — PostgreSQL (Member A)
 
 - [x] Add create, alter, and reset scripts plus realistic seed data; apply them successfully to a clean local PostgreSQL test database.
-- [ ] Add transaction/rollback examples, exchange function, trigger safeguards, views, indexes, and coupon full-text search.
-- [ ] Add representative SQL queries and explain the important ones.
+- [x] Add transaction/rollback examples, exchange function, trigger safeguards, views, indexes, and coupon full-text search.
+- [ ] Add representative SQL queries and explain the important ones (query guide is on the current feature branch; awaiting review/merge).
 
 ## Phase 3 — MongoDB (Member B)
 
-- [ ] Define audit documents, indexes, and sample events.
-- [ ] Add one or two admin dashboard aggregation pipelines and explain the MongoDB/PostgreSQL split.
+- [x] Define audit documents, indexes, and sample events.
+- [x] Add one or two admin dashboard aggregation pipelines and explain the MongoDB/PostgreSQL split.
 
 ## Phase 4 — App foundation and authentication (Member B)
 
-- [ ] Set up Next.js, Tailwind, environment configuration, and PostgreSQL/MongoDB connections.
-- [ ] Add registration/login, bcrypt password hashing, JWT httpOnly cookie handling, and backend role checks.
+- [x] Set up Next.js, Tailwind, environment configuration, and PostgreSQL/MongoDB connections.
+- [x] Add registration/login APIs, bcrypt password hashing, JWT httpOnly cookie handling, and backend role checks.
+- [ ] Add the customer registration page and successful-login MongoDB audit event (implemented on the current feature branch; awaiting review/merge).
 
 ## Phase 5 — API and pages (shared ownership)
 
-- [ ] Member A: customer wallets, exchange preview/execution, coupon search/claim/redeem, and history.
-- [ ] Member B: merchant coupon/redemption/settlement views and admin management, settlement, dashboard, and audit views.
-- [ ] Add clear API validation and database error messages; verify all writes are role-protected.
+- [x] Member A: customer wallets, exchange preview/execution, coupon search/claim/redeem, and history.
+- [x] Member B: merchant coupon/redemption/settlement views and admin merchant, settlement, dashboard, and audit views.
+- [x] Add clear API validation and database error messages; protect writes with backend role checks.
+- [ ] Finish the admin rates page and its read/write APIs (implemented on the current feature branch; awaiting review/merge).
 
 ## Phase 6 — Testing and documentation (shared)
 
-- [ ] Record about ten test cases with scenario, input, expected result, and actual result.
-- [ ] Complete requirements, data dictionary, architecture, DB implementation, screenshots checklist, conclusion, and final README.
+- [x] Record about ten test cases with scenario, input, expected result, and actual result.
+- [ ] Complete requirements, data dictionary, architecture, DB implementation, screenshots checklist, conclusion, and final README (report draft is on the current feature branch; real screenshots and final review remain).
+- [x] Complete Member B's integration-test pass and record the results in `docs/TEST_RESULTS.md`.
 
 ## Phase 7 — Optional deployment
 
@@ -71,5 +75,5 @@ Keep changes in each member's assigned folders and separate feature branches. Ag
 
 ## Phase 8 — Demo and viva preparation
 
-- [ ] Write a short demo script with a section for each member.
-- [ ] Prepare ten likely viva questions with plain-language answers.
+- [ ] Write a short demo script with a section for each member (draft is on the current feature branch; review together).
+- [ ] Prepare ten likely viva questions with plain-language answers (draft is on the current feature branch; review together).

@@ -13,6 +13,34 @@ function StatCard({ label, value, description }) {
   );
 }
 
+function StatusBars({ items, emptyMessage }) {
+  const maximum = Math.max(1, ...items.map((item) => Number(item.total)));
+
+  if (!items.length) return <p className="mt-4 text-sm text-zinc-500">{emptyMessage}</p>;
+
+  return (
+    <div className="mt-4 space-y-4" role="img" aria-label="Counts grouped by status">
+      {items.map((item) => {
+        const count = Number(item.total);
+        return (
+          <div key={item.status}>
+            <div className="mb-1 flex justify-between text-sm">
+              <span className="capitalize text-zinc-700">{item.status}</span>
+              <span className="font-semibold text-zinc-900">{count}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className="h-full rounded-full bg-emerald-600"
+                style={{ width: `${Math.max(4, (count / maximum) * 100)}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function formatDate(value) {
   if (!value) return "—";
   return new Date(value).toLocaleString();
@@ -76,14 +104,7 @@ export default function AdminDashboard() {
           <section className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-xl border border-zinc-200 bg-white p-5">
               <h2 className="text-lg font-semibold text-zinc-900">Merchant overview</h2>
-              <div className="mt-4 space-y-3">
-                {data.merchantsByStatus.length ? data.merchantsByStatus.map((item) => (
-                  <div key={item.status} className="flex justify-between rounded-lg bg-zinc-50 p-3">
-                    <span className="capitalize text-zinc-700">{item.status}</span>
-                    <span className="font-semibold text-zinc-900">{item.total}</span>
-                  </div>
-                )) : <p className="text-sm text-zinc-500">No merchant records yet.</p>}
-              </div>
+              <StatusBars items={data.merchantsByStatus} emptyMessage="No merchant records yet." />
               <Link href="/admin/merchants" className="mt-4 inline-block text-sm font-semibold text-emerald-700 hover:underline">
                 Manage merchants →
               </Link>
@@ -91,14 +112,7 @@ export default function AdminDashboard() {
 
             <div className="rounded-xl border border-zinc-200 bg-white p-5">
               <h2 className="text-lg font-semibold text-zinc-900">Coupon overview</h2>
-              <div className="mt-4 space-y-3">
-                {data.couponsByStatus.length ? data.couponsByStatus.map((item) => (
-                  <div key={item.status} className="flex justify-between rounded-lg bg-zinc-50 p-3">
-                    <span className="capitalize text-zinc-700">{item.status}</span>
-                    <span className="font-semibold text-zinc-900">{item.total}</span>
-                  </div>
-                )) : <p className="text-sm text-zinc-500">No coupon records yet.</p>}
-              </div>
+              <StatusBars items={data.couponsByStatus} emptyMessage="No coupon records yet." />
               <Link href="/admin/coupons" className="mt-4 inline-block text-sm font-semibold text-emerald-700 hover:underline">
                 View all coupons →
               </Link>
