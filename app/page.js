@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function HomePage() {
   const router = useRouter();
@@ -99,6 +100,9 @@ export default function HomePage() {
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        <p className="mt-6 text-center text-sm text-zinc-600">
+          New customer? <Link href="/register" className="font-semibold text-emerald-700 hover:underline">Create an account</Link>
+        </p>
       </section>
     </main>
   );

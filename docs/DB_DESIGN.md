@@ -168,4 +168,4 @@ The demo uses nearest-whole-point rounding and INR 0.10 per debited source point
 
 ## Views, indexes, and query examples
 
-`views_indexes.sql` defines customer wallet balances, coupon redemption summaries, and merchant settlement summaries. It adds indexes for transaction history, settlement lookups, and PostgreSQL full-text coupon search. `queries.sql` demonstrates INSERT, UPDATE, DELETE (inside a rollback block), SELECT, JOIN, GROUP BY, HAVING, ORDER BY, aggregates, a `NOT EXISTS` subquery, coupon search, and balance audit history.
+`views_indexes.sql` defines customer wallet balances, coupon redemption summaries, and merchant settlement summaries. It adds indexes for transaction history, settlement lookups, and PostgreSQL full-text coupon search. `queries.sql` demonstrates INSERT, UPDATE, DELETE (inside a rollback block), SELECT, JOIN, GROUP BY, HAVING, ORDER BY, aggregates, a `NOT EXISTS` subquery, coupon search, and balance audit history. See `docs/SQL_QUERY_GUIDE.md` for plain-language explanations of each example.
