@@ -54,7 +54,6 @@ A DBMS mini project for exchanging loyalty points across merchant programs and c
 5. Install dependencies and start the application:
 
    ```bash
-   npm ci
    npm run dev
    ```
 
