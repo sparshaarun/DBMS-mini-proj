@@ -1,6 +1,5 @@
 # Relational Database Design
-
-**Owner:** Member A  
+  
 **Status:** Design basis merged in PR #1; demo settlement rule agreed by both members
 
 ## Design overview
