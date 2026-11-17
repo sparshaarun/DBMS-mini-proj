@@ -32,15 +32,15 @@ erDiagram
     USERS {
         bigint user_id PK
         text full_name
-        text email UK
+        text email
         text password_hash
         text role
         timestamptz created_at
     }
     MERCHANTS {
         bigint merchant_id PK
-        bigint user_id FK_UK
-        text business_name UK
+        bigint user_id FK
+        text business_name
         text status
         timestamptz created_at
     }
