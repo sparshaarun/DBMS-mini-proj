@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS wallet_balance_audit (
 CREATE INDEX IF NOT EXISTS wallet_balance_audit_wallet_time_idx
     ON wallet_balance_audit(wallet_id, changed_at DESC);
 
-CREATE OR REPLACE FUNCTION guard_wallet_balance()
+CREATE OR REPLACE FUNCTION guard_wallet_balance() -- rejects neg balance and updates when balance changes
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -40,7 +40,7 @@ BEFORE UPDATE OF balance ON wallets
 FOR EACH ROW
 EXECUTE FUNCTION guard_wallet_balance();
 
-CREATE OR REPLACE FUNCTION record_wallet_balance_change()
+CREATE OR REPLACE FUNCTION record_wallet_balance_change() -- writes row to audit when wallet is created or updated
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -79,7 +79,7 @@ AFTER UPDATE OF balance ON wallets
 FOR EACH ROW
 EXECUTE FUNCTION record_wallet_balance_change();
 
-CREATE OR REPLACE FUNCTION validate_exchange_transaction()
+CREATE OR REPLACE FUNCTION validate_exchange_transaction() --checks transaction record
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -138,7 +138,7 @@ FOR EACH ROW
 EXECUTE FUNCTION validate_exchange_transaction();
 
 -- Monthly settlement totals stay open while new exchanges can still accrue.
-CREATE OR REPLACE FUNCTION guard_settlement_period_close()
+CREATE OR REPLACE FUNCTION guard_settlement_period_close() --stops settlement being marked as paid or cancelled
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
