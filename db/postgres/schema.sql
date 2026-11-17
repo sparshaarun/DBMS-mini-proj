@@ -3,7 +3,7 @@
 
 BEGIN;
 
-CREATE TABLE users (
+CREATE TABLE users ( --user accounts
     user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     full_name TEXT NOT NULL,
     email TEXT NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE users (
 -- Email uniqueness is case-insensitive.
 CREATE UNIQUE INDEX users_email_lower_uk ON users (LOWER(email));
 
-CREATE TABLE merchants (
+CREATE TABLE merchants ( -- connects merchant to its user
     merchant_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE REFERENCES users(user_id),
     business_name TEXT NOT NULL UNIQUE,
@@ -23,7 +23,7 @@ CREATE TABLE merchants (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE programs (
+CREATE TABLE programs ( -- merchant loyalty prog
     program_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     merchant_id BIGINT NOT NULL REFERENCES merchants(merchant_id),
     program_name TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE programs (
     CONSTRAINT programs_id_merchant_uk UNIQUE (program_id, merchant_id)
 );
 
-CREATE TABLE wallets (
+CREATE TABLE wallets ( -- stores customer point balance
     wallet_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id),
     program_id BIGINT NOT NULL REFERENCES programs(program_id),
@@ -43,7 +43,7 @@ CREATE TABLE wallets (
     CONSTRAINT wallets_id_program_uk UNIQUE (wallet_id, program_id)
 );
 
-CREATE TABLE coupons (
+CREATE TABLE coupons ( --stores merchant offers
     coupon_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     merchant_id BIGINT NOT NULL,
     program_id BIGINT NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE coupons (
     CONSTRAINT coupons_merchant_title_expiry_uk UNIQUE (merchant_id, title, expires_on)
 );
 
-CREATE TABLE user_coupons (
+CREATE TABLE user_coupons ( -- records customer claims
     user_coupon_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id),
     coupon_id BIGINT NOT NULL REFERENCES coupons(coupon_id),
@@ -73,7 +73,7 @@ CREATE TABLE user_coupons (
         CHECK ((status = 'redeemed') = (redeemed_at IS NOT NULL))
 );
 
-CREATE TABLE exchange_rates (
+CREATE TABLE exchange_rates ( --Stores point conversion rates
     exchange_rate_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     from_program_id BIGINT NOT NULL REFERENCES programs(program_id),
     to_program_id BIGINT NOT NULL REFERENCES programs(program_id),
@@ -84,7 +84,7 @@ CREATE TABLE exchange_rates (
     CONSTRAINT exchange_rates_different_programs_ck CHECK (from_program_id <> to_program_id)
 );
 
-CREATE TABLE transactions (
+CREATE TABLE transactions ( --Records point exchanges
     transaction_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id),
     from_wallet_id BIGINT NOT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE transactions (
         REFERENCES wallets(wallet_id, program_id)
 );
 
-CREATE TABLE settlements (
+CREATE TABLE settlements ( --Stores settlement between merchants
     settlement_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     debtor_merchant_id BIGINT NOT NULL REFERENCES merchants(merchant_id),
     creditor_merchant_id BIGINT NOT NULL REFERENCES merchants(merchant_id),
