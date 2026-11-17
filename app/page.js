@@ -32,7 +32,7 @@ export default function HomePage() {
       if (data.user.role === "merchant") {
         router.push("/merchant");
       } else if (data.user.role === "customer") {
-        router.push("/coupons");
+        router.push("/dashboard");
       } else if (data.user.role === "admin") {
         router.push("/admin");
       } else {
